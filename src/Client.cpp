@@ -5,6 +5,7 @@
 #include <esp_log.h>
 #include <led.h>
 #include <sensor.h>
+#include <sysinfo.h>
 
 #define SERVER_IP "NULL"
 #define SERVER_PORT 42069
@@ -76,6 +77,16 @@ void client_setup(void * params) {
                     free(result);
                     send(main_sock, finalMsg, finalLen, 0);
                     free(finalMsg);
+                    continue;
+                } else if (strcmp("system_info",buf) == 0) {
+                    ESP_LOGE(LOGTYPE, "Server Request system info...");
+                    float SysTemp = getSoCTemp();
+                    u_int32_t minFree = 0;
+                    u_int32_t freeHeap = 0;
+                    getHeapInfo(&freeHeap, &minFree);
+                    char response[250];
+                    sprintf(response, "SoC Temperature: %.2f°C\r\nCurrent Free Heap: %u\r\nMin Free Heap: %u", SysTemp, minFree, freeHeap);
+                    send(main_sock, response, strlen(response)+1, 0);
                     continue;
                 }
                 ESP_LOGE(LOGTYPE, "Unexpected Command Received: %s", buf);
