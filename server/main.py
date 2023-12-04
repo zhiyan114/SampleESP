@@ -1,5 +1,6 @@
 import socket
 import threading
+import time
 
 current_socket: socket.socket = None
 
@@ -14,7 +15,29 @@ def receive_thread(client_socket: socket.socket):
                 client_socket.close()
                 current_socket = None
                 break
-            print(f"Client Response -> {data.decode()}")
+            strdata = data.decode()
+            if (strdata == "_pong\0"):
+                continue
+            print(f"Client Response -> {strdata}")
+        except TimeoutError:
+            print("Client Timed Out...")
+            client_socket.close()
+            current_socket = None
+            break
+        except ConnectionResetError:
+            print("Client Disconnected...")
+            client_socket.close()
+            current_socket = None
+            break
+
+
+def client_ping(client_socket: socket.socket):
+    while True:
+        global current_socket
+        try:
+            client_socket.sendall("_ping".encode())
+            # sleep for 5 seconds
+            time.sleep(5)
         except TimeoutError:
             print("Client Timed Out...")
             client_socket.close()
@@ -36,9 +59,12 @@ def connect_req_handler(server_socket: socket.socket):
             client_socket.close()
             continue
         print(f"Accepted connection from {client_address}")
+        client_socket.settimeout(10)
         current_socket = client_socket
         thread = threading.Thread(target=receive_thread, args=(client_socket,))
         thread.start()
+        pthread = threading.Thread(target=client_ping, args=(client_socket,))
+        pthread.start()
 
 
 def tcp_server():
@@ -60,7 +86,7 @@ def tcp_server():
             print("Wait for client to connect before sending a command...")
             continue
         command = command+'\0'
-        current_socket.send(command.encode())
+        current_socket.sendall(command.encode())
 
 
 if __name__ == "__main__":

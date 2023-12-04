@@ -71,7 +71,13 @@ void client_setup(void * params) {
                         break;
                     }
                 // Handle server requests
-                if(strcmp("request_distance",buf) == 0) {
+                if(strncmp("_ping",buf, bsize) == 0) {
+                    // Internal keep-alive handler
+                    ESP_LOGE(LOGTYPE, "Received keep-alive request...");
+                    const char* reply = "_pong";
+                    send(main_sock, reply, strlen(reply)+1, 0);
+                    continue;
+                } else if(strncmp("req_distance",buf, bsize) == 0) {
                     ESP_LOGE(LOGTYPE, "Server Request distance...");
                     float distance = sensor_distance();
                     int len = snprintf(NULL, 0, "%f", distance);
@@ -84,7 +90,7 @@ void client_setup(void * params) {
                     send(main_sock, finalMsg, finalLen, 0);
                     free(finalMsg);
                     continue;
-                } else if (strcmp("sys_info",buf) == 0) {
+                } else if (strncmp("sys_info",buf, bsize) == 0) {
                     ESP_LOGE(LOGTYPE, "Server Request system info...");
 
                     // Get Heap Info
@@ -93,13 +99,14 @@ void client_setup(void * params) {
                     getHeapInfo(&freeHeap, &minFree);
 
                     // Get CPU Info
-                    char CpuExeTime[1000];
-                    char CpuTaskList[1000];
-                    getCpuInfo(CpuExeTime, CpuTaskList);
+                    char CpuExeTime[300];
+                    char CpuTaskList[300];
+                    getCpuInfo(CpuExeTime,CpuTaskList);
 
                     // Finalize the response and reply to the server
-                    char response[2500];
-                    sprintf(response, "CPU Execution Report: %s\r\nCPU Task List Report: %s\r\nCurrent Free Heap: %lu\r\nMin Free Heap: %lu", CpuExeTime, CpuTaskList, minFree, freeHeap);
+                    char response[900];
+                    sprintf(response, "\r\nCPU Execution Report:\r\n%s\r\nCPU Task Report:\r\n%s\r\nCurrent Free Heap: %lu\r\nMin Free Heap: %lu", 
+                    CpuExeTime, CpuTaskList, minFree, freeHeap);
                     send(main_sock, response, strlen(response)+1, 0);
                     continue;
                 }
