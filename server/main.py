@@ -6,7 +6,7 @@ current_socket: socket.socket = None
 
 
 def receive_thread(client_socket: socket.socket):
-    while True:
+    while current_socket is not None:
         global current_socket
         try:
             data = client_socket.recv(1000)
@@ -29,10 +29,14 @@ def receive_thread(client_socket: socket.socket):
             client_socket.close()
             current_socket = None
             break
+        except OSError:
+            client_socket.close()
+            current_socket = None
+            break
 
 
 def client_ping(client_socket: socket.socket):
-    while True:
+    while current_socket is not None:
         global current_socket
         try:
             client_socket.sendall("_ping".encode())
@@ -45,6 +49,10 @@ def client_ping(client_socket: socket.socket):
             break
         except ConnectionResetError:
             print("Client Disconnected...")
+            client_socket.close()
+            current_socket = None
+            break
+        except OSError:
             client_socket.close()
             current_socket = None
             break
