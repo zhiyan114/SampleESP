@@ -1,2 +1,3 @@
-float getSoCTemp();
-void getHeapInfo(u_int32_t * freeHeap, u_int32_t * minFree);
+#include <stdint.h>
+// float getSoCTemp();
+void getHeapInfo(uint32_t * freeHeap, uint32_t * minFree);

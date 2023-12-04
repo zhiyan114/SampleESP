@@ -78,14 +78,14 @@ void client_setup(void * params) {
                     send(main_sock, finalMsg, finalLen, 0);
                     free(finalMsg);
                     continue;
-                } else if (strcmp("system_info",buf) == 0) {
+                } else if (strcmp("ram_usage",buf) == 0) {
                     ESP_LOGE(LOGTYPE, "Server Request system info...");
-                    float SysTemp = getSoCTemp();
-                    u_int32_t minFree = 0;
-                    u_int32_t freeHeap = 0;
+                    float SysTemp = -1; //getSoCTemp();
+                    uint32_t minFree = 0;
+                    uint32_t freeHeap = 0;
                     getHeapInfo(&freeHeap, &minFree);
                     char response[250];
-                    sprintf(response, "SoC Temperature: %.2f°C\r\nCurrent Free Heap: %u\r\nMin Free Heap: %u", SysTemp, minFree, freeHeap);
+                    sprintf(response, "SoC Temperature: %.2f°C\r\nCurrent Free Heap: %lu\r\nMin Free Heap: %lu", SysTemp, minFree, freeHeap);
                     send(main_sock, response, strlen(response)+1, 0);
                     continue;
                 }

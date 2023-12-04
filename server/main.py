@@ -36,7 +36,6 @@ def connect_req_handler(server_socket: socket.socket):
             client_socket.close()
             continue
         print(f"Accepted connection from {client_address}")
-        client_socket.settimeout(5)
         current_socket = client_socket
         thread = threading.Thread(target=receive_thread, args=(client_socket,))
         thread.start()
@@ -47,7 +46,6 @@ def tcp_server():
     server_port = 42069
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.settimeout(5)
     server_socket.bind((server_ip, server_port))
     server_socket.listen(5)
 
