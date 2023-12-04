@@ -2,6 +2,7 @@
 #include <wifi.h>
 #include <led.h>
 #include <sensor.h>
+#include <client.h>
 
 
 void main_loader();
@@ -14,6 +15,7 @@ extern "C" {
         ultrasonic_init();
         setup_wlan();
         main_loader();
+        xTaskCreate(client_setup, "client_loader", 4096, NULL, 5, NULL);
     }
 }
 

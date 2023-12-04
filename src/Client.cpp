@@ -6,6 +6,7 @@
 #include <led.h>
 #include <sensor.h>
 #include <sysinfo.h>
+#include <wifi.h>
 
 #define SERVER_IP "NULL"
 #define SERVER_PORT 42069
@@ -21,6 +22,11 @@ char* concatStrings(const char* str1, const char* str2, size_t* len);
 void client_setup(void * params) {
     while (1)
     {
+        if(!wifiConnected) {
+            ESP_LOGI(LOGTYPE, "Waiting for wifi connection...");
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+            continue;
+        }
         struct sockaddr_in dest_addr;
         dest_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
         dest_addr.sin_family = AF_INET;
@@ -78,14 +84,22 @@ void client_setup(void * params) {
                     send(main_sock, finalMsg, finalLen, 0);
                     free(finalMsg);
                     continue;
-                } else if (strcmp("ram_usage",buf) == 0) {
+                } else if (strcmp("sys_info",buf) == 0) {
                     ESP_LOGE(LOGTYPE, "Server Request system info...");
-                    float SysTemp = -1; //getSoCTemp();
+
+                    // Get Heap Info
                     uint32_t minFree = 0;
                     uint32_t freeHeap = 0;
                     getHeapInfo(&freeHeap, &minFree);
-                    char response[250];
-                    sprintf(response, "SoC Temperature: %.2f°C\r\nCurrent Free Heap: %lu\r\nMin Free Heap: %lu", SysTemp, minFree, freeHeap);
+
+                    // Get CPU Info
+                    char CpuExeTime[1000];
+                    char CpuTaskList[1000];
+                    getCpuInfo(CpuExeTime, CpuTaskList);
+
+                    // Finalize the response and reply to the server
+                    char response[2500];
+                    sprintf(response, "CPU Execution Report: %s\r\nCPU Task List Report: %s\r\nCurrent Free Heap: %lu\r\nMin Free Heap: %lu", CpuExeTime, CpuTaskList, minFree, freeHeap);
                     send(main_sock, response, strlen(response)+1, 0);
                     continue;
                 }

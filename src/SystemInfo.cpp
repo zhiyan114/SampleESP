@@ -8,25 +8,13 @@
 
 #define LOGTYPE "SysInfo"
 
-// temperature_sensor_handle_t temp_handle = NULL;
-// void initTempSensor() {
-//     temperature_sensor_config_t temp_sensor = {
-//         .range_min = 0,
-//         .range_max = 100,
-//     };
-//     temperature_sensor_install(&temp_sensor, &temp_handle);
-// }
-
-// // Get the SoC Temperature (in celsius)
-// float getSoCTemp() {
-//     temperature_sensor_enable(temp_handle);
-//     float tsens_out;
-//     temperature_sensor_get_celsius(temp_handle, &tsens_out);
-//     printf("Temperature in %f °C\n", tsens_out);
-//     ESP_LOGI(LOGTYPE, "Temperature Read: %.2f degrees Celsius", tsens_out);
-//     temperature_sensor_disable(temp_handle);
-//     return tsens_out;
-// }
+// Get the basic cpu usage info
+void getCpuInfo(char*RunTime, char*TaskList) {
+	vTaskGetRunTimeStats(RunTime);
+	ESP_LOGI(LOGTYPE, "CPU Runtime: %s", RunTime);
+	vTaskList(TaskList);
+	ESP_LOGI(LOGTYPE, "CPU Tasklist: %s", TaskList);
+}
 
 // Get the basic memory usage info
 void getHeapInfo(uint32_t * freeHeap, uint32_t * minFree) {

@@ -7,12 +7,15 @@
 #include "nvs_flash.h"
 #include <wifi.h>
 #include <led.h>
-#include <client.h>
+
 
 #define SSID "NULL"
 #define PASS "NULL"
 
 #define LOGTYPE "WIFI"
+
+// Current wifi connection status
+bool wifiConnected = false;
 
 static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
@@ -30,11 +33,12 @@ static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_b
     case WIFI_EVENT_STA_DISCONNECTED:
         esp_wifi_connect();
         setLedStatus(wifiLED, false);
+        wifiConnected = false;
         ESP_LOGI(LOGTYPE, "WiFi lost connection | reconnecting ... \n");
         break;
     case IP_EVENT_STA_GOT_IP:
         setLedStatus(wifiLED, true);
-        xTaskCreate(client_setup, "client_loader", 4096, NULL, 5, NULL);
+        wifiConnected = true;
         char ip_str[16];
         ESP_LOGI(LOGTYPE, "Device was assigned IP: %s\n", esp_ip4addr_ntoa(&((ip_event_got_ip_t *)event_data)->ip_info.ip, ip_str, sizeof(ip_str)));
         break;
