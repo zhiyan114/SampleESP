@@ -6,8 +6,8 @@ current_socket: socket.socket = None
 
 
 def receive_thread(client_socket: socket.socket):
+    global current_socket
     while current_socket is not None:
-        global current_socket
         try:
             data = client_socket.recv(1000)
             if len(data) == 0:
@@ -36,8 +36,8 @@ def receive_thread(client_socket: socket.socket):
 
 
 def client_ping(client_socket: socket.socket):
+    global current_socket
     while current_socket is not None:
-        global current_socket
         try:
             client_socket.sendall("_ping".encode())
             # sleep for 5 seconds
