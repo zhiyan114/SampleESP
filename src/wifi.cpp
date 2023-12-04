@@ -1,21 +1,19 @@
 // WiFi connection and POST command
 
 #include <stdio.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/timers.h"
-#include "freertos/event_groups.h"
+#include "freertos/FreeRTOS.h" // useless header here but keep until intellisense cache issue is fixed
 #include "esp_wifi.h"
 #include "esp_log.h"
-#include <esp_system.h>
 #include "nvs_flash.h"
-#include "esp_netif.h"
-#include "esp_http_server.h"
 #include <wifi.h>
+#include <led.h>
+#include <client.h>
+
 #define SSID "NULL"
 #define PASS "NULL"
 
 #define LOGTYPE "WIFI"
+
 static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
     switch (event_id)
@@ -31,9 +29,12 @@ static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_b
     }
     case WIFI_EVENT_STA_DISCONNECTED:
         esp_wifi_connect();
+        setLedStatus(wifiLED, false);
         ESP_LOGI(LOGTYPE, "WiFi lost connection | reconnecting ... \n");
         break;
     case IP_EVENT_STA_GOT_IP:
+        setLedStatus(wifiLED, true);
+        xTaskCreate(client_setup, "client_loader", 4096, NULL, 5, NULL);
         char ip_str[16];
         ESP_LOGI(LOGTYPE, "Device was assigned IP: %s\n", esp_ip4addr_ntoa(&((ip_event_got_ip_t *)event_data)->ip_info.ip, ip_str, sizeof(ip_str)));
         break;
@@ -67,11 +68,4 @@ void setup_wlan()
     esp_wifi_set_mode(WIFI_MODE_STA);
     esp_wifi_start();
     esp_wifi_connect();
-}
-
-static esp_err_t post_handler(httpd_req_t *req)
-{
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    httpd_resp_send(req, "URI POST Response ... from ESP32", HTTPD_RESP_USE_STRLEN);
-    return ESP_OK;
 }
