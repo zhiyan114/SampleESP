@@ -87,8 +87,8 @@ def tcp_server():
 
     thread = threading.Thread(target=connect_req_handler, args=(server_socket,))
     thread.start()
+    print("Enter command:")
     while (True):
-        print("Enter command:")
         command = input()
         if (current_socket is None):
             print("Wait for client to connect before sending a command...")

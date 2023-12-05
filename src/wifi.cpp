@@ -8,7 +8,6 @@
 #include <wifi.h>
 #include <led.h>
 
-
 #define SSID "NULL"
 #define PASS "NULL"
 
