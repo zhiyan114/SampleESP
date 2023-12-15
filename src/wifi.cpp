@@ -41,14 +41,15 @@ static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_b
         display_write_page("wifi: disconn", 1, false);
         display_write_page("Waiting IP...", 2, false);
         break;
-    case IP_EVENT_STA_GOT_IP:
+    case IP_EVENT_STA_GOT_IP: {
         setLedStatus(wifiLED, true);
         wifiConnected = true;
-        char ip_str[16];
+        char ip_str[17];
         ESP_LOGI(LOGTYPE, "Device was assigned IP: %s\n", esp_ip4addr_ntoa(&((ip_event_got_ip_t *)event_data)->ip_info.ip, ip_str, sizeof(ip_str)));
         display_write_page("wifi: conn | IP:", 1, false);
         display_write_page(ip_str, 2, false);
         break;
+    } 
     default:
         break;
     }

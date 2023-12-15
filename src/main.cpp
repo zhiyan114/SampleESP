@@ -18,6 +18,7 @@ extern "C" {
         ultrasonic_init();
         setup_wlan();
         // Run component startup scripts
+        display_write_page("Status", 0, true);
         testLED();
         // Run the main functions
         main_loader();
@@ -39,7 +40,6 @@ void testLED() {
 
 // This function should load the main code
 void main_loader() {
-    display_write_page("Status", 0, true);
     ESP_LOGI("main", "Hello world!");
 }
 
@@ -54,8 +54,11 @@ void data_render(void *pvParameters) {
     while(1) {
         // Page 4 render stuff
         double distance = Usensor_distance();
-        char distanceStr[17];
-        sprintf(distanceStr, "U-Sonic: %.0fcm", distance);
+        char distanceStr[17]; // 16 characters + null terminator
+        if(distance < 100)
+            sprintf(distanceStr, "U-Sonic: %.2fcm", distance);
+        else
+            sprintf(distanceStr, "U-Sonic: %.0fcm", distance);
         display_write_page(distanceStr, 4, false);
         vTaskDelay(500 / portTICK_PERIOD_MS);
     }
