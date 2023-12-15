@@ -4,9 +4,10 @@
 #include <client.h>
 #include <esp_log.h>
 #include <led.h>
-#include <sensor.h>
+#include <Usensor.h>
 #include <sysinfo.h>
 #include <wifi.h>
+#include <display.h>
 
 #define SERVER_IP "NULL"
 #define SERVER_PORT 42069
@@ -22,6 +23,7 @@ char* concatStrings(const char* str1, const char* str2, size_t* len);
 void client_setup(void * params) {
     while (1)
     {
+        display_write_page("client: discon", 3, false);
         if(!wifiConnected) {
             ESP_LOGI(LOGTYPE, "Waiting for wifi connection...");
             vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -47,7 +49,7 @@ void client_setup(void * params) {
             if (connect(main_sock, (struct sockaddr *)&dest_addr, sizeof(struct sockaddr_in)) == 0)
             {
                 ESP_LOGI(LOGTYPE, "Successfully connected to server");
-
+                display_write_page("client: conn", 3, false);
                 // TODO: Add your code for handling communication with the server here
             }
             else
@@ -79,7 +81,7 @@ void client_setup(void * params) {
                     continue;
                 } else if(strncmp("req_distance",buf, bsize) == 0) {
                     ESP_LOGE(LOGTYPE, "Server Request distance...");
-                    float distance = sensor_distance();
+                    float distance = Usensor_distance();
                     int len = snprintf(NULL, 0, "%f", distance);
                     char *result = (char*)malloc(sizeof(char)*(len + 1));
                     snprintf(result, len + 1, "%f", distance);
@@ -117,6 +119,7 @@ void client_setup(void * params) {
             } while (bsize >= 0);
             setLedStatus(sensorLED, false);
             ESP_LOGI(LOGTYPE, "Server Disconnected (5s cooldown before reconnect)...");
+            display_write_page("server: discon", 3, false);
             vTaskDelay(5000 / portTICK_PERIOD_MS);
             ESP_LOGI(LOGTYPE, "Reconnecting to the server...");
             close(main_sock);

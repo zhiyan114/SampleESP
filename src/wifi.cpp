@@ -7,6 +7,7 @@
 #include "nvs_flash.h"
 #include <wifi.h>
 #include <led.h>
+#include <display.h>
 
 #define SSID "NULL"
 #define PASS "NULL"
@@ -22,11 +23,14 @@ static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_b
     {
     case WIFI_EVENT_STA_START:
         ESP_LOGI(LOGTYPE, "WiFi connecting WIFI_EVENT_STA_START ... \n");
+        display_write_page("wifi: started", 1, false);
+        display_write_page("Waiting IP...", 2, false);
         break;
     case WIFI_EVENT_STA_CONNECTED: {
         esp_netif_t *sta_netif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
         esp_netif_set_hostname(sta_netif, "FurryNet_ESP32");
         ESP_LOGI(LOGTYPE, "WiFi connected WIFI_EVENT_STA_CONNECTED ... \n");
+        display_write_page("wifi: wait DHCP", 1, false);
         break;
     }
     case WIFI_EVENT_STA_DISCONNECTED:
@@ -34,12 +38,16 @@ static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_b
         setLedStatus(wifiLED, false);
         wifiConnected = false;
         ESP_LOGI(LOGTYPE, "WiFi lost connection | reconnecting ... \n");
+        display_write_page("wifi: disconn", 1, false);
+        display_write_page("Waiting IP...", 2, false);
         break;
     case IP_EVENT_STA_GOT_IP:
         setLedStatus(wifiLED, true);
         wifiConnected = true;
         char ip_str[16];
         ESP_LOGI(LOGTYPE, "Device was assigned IP: %s\n", esp_ip4addr_ntoa(&((ip_event_got_ip_t *)event_data)->ip_info.ip, ip_str, sizeof(ip_str)));
+        display_write_page("wifi: conn | IP:", 1, false);
+        display_write_page(ip_str, 2, false);
         break;
     default:
         break;

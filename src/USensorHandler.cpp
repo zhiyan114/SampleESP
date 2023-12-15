@@ -1,5 +1,5 @@
 // HC-SR04 Ultrasonic sensor codes
-#include <sensor.h>
+#include <Usensor.h>
 #include <led.h>
 #include "freertos/FreeRTOS.h"
 #include "driver/gpio.h"
@@ -47,7 +47,7 @@ void ultrasonic_init() {
 }
 
 // The main code to get the distance of the sensor
-double sensor_distance() {
+double Usensor_distance() {
     gpio_set_level(TRIG_PIN, 0);
     vTaskDelay(pdMS_TO_TICKS(2));
 
