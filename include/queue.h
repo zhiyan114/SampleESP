@@ -3,5 +3,5 @@
 typedef struct {
     char* text;
     int page;
-    bool isCenter;
+    size_t text_len;
 } displayQueue_t;

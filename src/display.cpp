@@ -41,38 +41,44 @@ void display_text(const char* text) {
 // Write text to a specific line on the display (isCenter is used to center the text on the line)
 QueueHandle_t writePageQueue = xQueueCreate(32, sizeof(displayQueue_t));
 void display_write_page(const char* text, int page, bool isCenter) {
-	char* strArr = new char[17];
-	strncpy(strArr, text, strlen(text) + 1);
+	// Get the length and allocate the space
+	size_t text_len = strlen(text); // Each line only supports 16 characters
+	char* strArr = (char*)malloc(sizeof(char) * (text_len + 1));
+	text_len = text_len > 16 ? 16 : text_len;
+
+	// Check if the text needs to be centered
+	if(isCenter) {
+		int padLen = ceil((16 - text_len) / 2);
+		for(int i = 0; i < padLen; i++)
+			strArr[i] = ' ';
+		for(int i = padLen; i < padLen+text_len; i++)
+			strArr[i] = text[i - padLen];
+		text_len+=padLen;
+		strArr[text_len] = '\0';
+	} else strncpy(strArr, text, text_len + 1);
+
+	// Add it to the queue
 	displayQueue_t data;
 	data.text = strArr;
 	data.page = page;
-	data.isCenter = isCenter;
+	data.text_len = text_len;
 	xQueueSend(writePageQueue, &data, 0);
 }
 
-// Internal function to handle writeLineQueue
+/*
+Internal function to handle writeLineQueue
+Executing ssd1306 display command simultaneously causes the display to glitch out
+*/
 void display_write_queue(void *pvParameters) {
 	while(1) {
 		displayQueue_t data;
 		if(xQueueReceive(writePageQueue, &data, portMAX_DELAY)) {
 			/* Handler Stuff Here */
-			char newStr[17];
 			ssd1306_clear_line(&dev, data.page, false);
-			uint8_t text_len = strlen(data.text); // Each line only supports 16 characters
-			text_len = text_len > 16 ? 16 : text_len;
-			if(data.isCenter) {
-				int padLen = ceil((16 - text_len) / 2);
-				for(int i = 0; i < padLen; i++)
-					newStr[i] = ' ';
-				for(int i = padLen; i < padLen+text_len; i++)
-					newStr[i] = data.text[i - padLen];
-				newStr[16] = '\0';
-				text_len+=padLen;
-			} else strcpy(newStr, data.text);
 			vTaskDelay(30 / portTICK_PERIOD_MS);
-    		ssd1306_display_text(&dev, data.page, newStr, text_len, false);
+    		ssd1306_display_text(&dev, data.page, data.text, data.text_len, false);
 			/* End Handler Stuff */
-			delete data.text;
+			free(data.text);
 		}
 		else
 			vTaskDelay(30 / portTICK_PERIOD_MS);
