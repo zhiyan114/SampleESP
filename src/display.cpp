@@ -56,7 +56,7 @@ void display_write_page(const char* text, int page, bool isCenter) {
 		text_len+=padLen;
 
 		// Fill in the rest of the string with byte 0
-		for(int i = text_len; i < 17; i++)
+		for(int i = text_len; i < 16; i++)
 			strArr[i] = '\0';
 	} else strncpy(strArr, text, 16);
 
