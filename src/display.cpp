@@ -43,7 +43,7 @@ QueueHandle_t writePageQueue = xQueueCreate(32, sizeof(displayQueue_t));
 void display_write_page(const char* text, int page, bool isCenter) {
 	// Get the length and allocate the space
 	size_t text_len = strlen(text); // Each line only supports 16 characters
-	char* strArr = (char*)malloc(sizeof(char) * (text_len + 1));
+	char* strArr = (char*)malloc(sizeof(char)*16);
 	text_len = text_len > 16 ? 16 : text_len;
 
 	// Check if the text needs to be centered
@@ -54,14 +54,16 @@ void display_write_page(const char* text, int page, bool isCenter) {
 		for(int i = padLen; i < padLen+text_len; i++)
 			strArr[i] = text[i - padLen];
 		text_len+=padLen;
-		strArr[text_len] = '\0';
-	} else strncpy(strArr, text, text_len + 1);
+
+		// Fill in the rest of the string with byte 0
+		for(int i = text_len; i < 17; i++)
+			strArr[i] = '\0';
+	} else strncpy(strArr, text, 16);
 
 	// Add it to the queue
 	displayQueue_t data;
 	data.text = strArr;
 	data.page = page;
-	data.text_len = text_len;
 	xQueueSend(writePageQueue, &data, 0);
 }
 
@@ -74,10 +76,7 @@ void display_write_queue(void *pvParameters) {
 		displayQueue_t data;
 		if(xQueueReceive(writePageQueue, &data, portMAX_DELAY)) {
 			/* Handler Stuff Here */
-			ssd1306_clear_line(&dev, data.page, false);
-			vTaskDelay(30 / portTICK_PERIOD_MS);
-    		ssd1306_display_text(&dev, data.page, data.text, data.text_len, false);
-			/* End Handler Stuff */
+			ssd1306_display_text(&dev, data.page, data.text, 16, false);
 			free(data.text);
 		}
 		else
