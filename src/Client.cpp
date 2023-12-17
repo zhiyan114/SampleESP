@@ -45,25 +45,25 @@ void client_setup(void * params) {
                 continue;
             }
 
-            // Socket connection stuff
-            if (connect(main_sock, (struct sockaddr *)&dest_addr, sizeof(struct sockaddr_in)) == 0)
-            {
-                ESP_LOGI(LOGTYPE, "Successfully connected to server");
-                display_write_page("client: conn", 3, false);
-                // TODO: Add your code for handling communication with the server here
-            }
-            else
+            // Check if connection failed
+            if (connect(main_sock, (struct sockaddr *)&dest_addr, sizeof(struct sockaddr_in)) == -1)
             {
                 ESP_LOGE(LOGTYPE, "Socket unable to connect: errno %d", errno);
+                close(main_sock);
                 vTaskDelay(1000 / portTICK_PERIOD_MS);
                 continue;
             }
 
-            // Handle disconnection
+            // Connection successful message
+            setLedStatus(sensorLED, true);
+            display_write_page("client: conn", 3, false);
+            ESP_LOGI(LOGTYPE, "Successfully connected to server");
+
+            // Handle server requests
             int bsize;
             do
             {
-                setLedStatus(sensorLED, true);
+                
                 char buf[100];
                 bsize = recv(main_sock, buf, sizeof(buf), 0); // This shouldn't do anything lol. It's just there to pull conn status ig.
                 // Connection checks
